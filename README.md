@@ -14,7 +14,7 @@ We provide the dataset and embeddings of 13,886 gene sets from NCI, Reactome, an
 
 ## How to run
 
-An example is in src/run_DeepSyn.py
+An example is in src/Grep_run_all_methods.py
 ```
 cd src
 python Grep_run_all_methods.py
