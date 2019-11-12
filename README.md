@@ -7,6 +7,7 @@ Set2Gaussian is a network-based embedding approach which takes a set of gene set
 ## Publication (under review)
 
 **Set2Gaussian: Embedding Gene Sets as Gaussian Distributions for Large-scale Gene Set Analysis**.
+
 *Sheng Wang, Emily Flynn, Russ B. Altman*.
 
 ## Dataset
