@@ -14,20 +14,16 @@ from sklearn import metrics
 import cPickle as pickle
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
-repo_dir = '/oak/stanford/groups/rbaltman/swang91/Sheng_repo/'
-data_dir = '/oak/stanford/groups/rbaltman/swang91/Sheng_repo/data/'
-sys.path.append(repo_dir)
-os.chdir(repo_dir)
-from src.models.deep_gaussian_embedding.model_final import Graph2Gauss
-from src.models.deep_gaussian_embedding.utils import evaluate_pathway_member
-from src.datasets.BioNetwork import BioNetwork
-from src.models.random_walk_with_restart.RandomWalkRestart import RandomWalkRestart, DCA_vector
-from src.models.random_walk_with_restart.GenerateDiffusion import GenerateDiffusion
+from Set2Gaussian.BioNetwork import BioNetwork
+from Set2Gaussian.RandomWalkRestart import RandomWalkRestart, DCA_vector
+from Set2Gaussian.GenerateDiffusion import GenerateDiffusion
+from Set2Gaussian.utils import evaluate_pathway_member
+from Set2Gaussian.model import Graph2Gauss
 from sklearn.cross_validation import train_test_split
 import scipy.spatial as sp
 
 
-def read_node_embedding(DCA_dim,DCA_rst=0.8,network_file = 'network/human/string_integrated.txt'):
+def read_node_embedding(data_dir,DCA_dim,DCA_rst=0.8,network_file = 'network/human/string_integrated.txt'):
 	net_file_l = []
 	net_file_l.append(data_dir + network_file)
 	Net_obj = BioNetwork(net_file_l)
@@ -87,7 +83,7 @@ def create_matrix(Node_RWR, Net_obj, p_train, dataset_l = ['nci','Reactome','msi
 	train_ind, test_ind = train_test_split(range(nnode), test_size=0.01)
 	train_ind = np.array(range(nnode))
 	return Path_RWR, log_Path_RWR, log_node_RWR, train_ind, test_ind, Path_mat_train_all, Path_mat_test_all
-	
+
 def save_mbedding(p2g, path_mu, path_cov, Grep_node_emb, output_file):
 	np.save(output_file + 'p2g.out', p2g)
 	np.save(output_file + 'path_mu.out', path_mu)
@@ -97,12 +93,12 @@ def save_mbedding(p2g, path_mu, path_cov, Grep_node_emb, output_file):
 def run_embedding_method(method,log_Path_RWR, log_node_RWR, Path_RWR, node_emb, node_context,train_ind,test_ind, Path_mat_train, para_dict, metric= 'cosine'):
 	npath, nnode = np.shape(Path_RWR)
 	if method == 'Grep':
-		Grep_obj = Graph2Gauss(log_Path_RWR, log_node_RWR, Path_RWR, node_emb, node_context, 
+		Grep_obj = Graph2Gauss(log_Path_RWR, log_node_RWR, Path_RWR, node_emb, node_context,
 		path_batch_size = 20, node_batch_size = 5000,lr = para_dict['lr'],
 		L=para_dict['DCA_dim'],optimize_diag_path=para_dict['optimize_diag_path'],optimize_path_mean = para_dict['optimize_path_mean'],n_hidden = [para_dict['nhidden']],early_stopping=para_dict['early_stopping'],gene_loss_lambda=para_dict['gene_loss_lambda'],max_iter=para_dict['max_iter'],seed=0,train_ind=train_ind,test_ind = test_ind)#change 200 to 20
 		path_mu, path_cov, Grep_node_emb, p2g = Grep_obj.train()
 		return path_mu, path_cov, Grep_node_emb, p2g
-		
+
 	if method == 'RWR':
 		return [],[],[],log_Path_RWR
 	if method == 'Network_smoothed_mean':
