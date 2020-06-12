@@ -17,7 +17,7 @@ if len(sys.argv) <= 2:
 	lr = 0.0001
 	p_train = 0.5
 	gene_loss_lambda = 100
-	dataset = 'Reactome'
+	dataset = ['nci']
 	early_stopping = 20
 else:
 	dataset = str(sys.argv[1])
@@ -34,6 +34,8 @@ optimize_path_mean = False
 method = 'Grep'
 DCA_rst = 0.8
 data_dir = ''
+network_file = 'string_integrated.txt' # file format: geneA\tgeneB\tconfidence\n
+output_emb_file = 'output_embed'
 para_dict = {}
 para_dict['max_iter'] = max_iter
 para_dict['DCA_rst'] = DCA_rst
@@ -53,17 +55,10 @@ para_dict['optimize_diag_path'] = optimize_diag_path
 
 print (dataset, DCA_dim, nhidden, lr, p_train, gene_loss_lambda, max_iter, early_stopping)
 
-Net_obj, Node_RWR, node_emb, node_context = read_node_embedding(data_dir, DCA_dim)
+Net_obj, Node_RWR, node_emb, node_context = read_node_embedding(data_dir, DCA_dim, network_file)
 
 Path_RWR, log_Path_RWR, log_node_RWR, train_ind, test_ind, Path_mat_train, Path_mat_test = create_matrix(Node_RWR, Net_obj, p_train, dataset_l = dataset)
 
 path_mu, path_cov, Grep_node_emb, p2g = run_embedding_method(method,log_Path_RWR, log_node_RWR, Path_RWR, node_emb, node_context,train_ind,test_ind,Path_mat_train,para_dict)
 
-save_mbedding( p2g, path_mu, path_cov, Grep_node_emb, output_file='result/PathwayEmb/RecoverPath/MatrixOutput/'+str(optimize_diag_path)+'_'+str(DCA_rst)+'_'+para_dict['dataset_name']+'_'+str(DCA_dim) + '_' + str(nhidden) +  '_' +str(lr) +  '_' +str(p_train) +  '_' +str(gene_loss_lambda) + '_' + str(max_iter) +'_'+str(early_stopping))
-
-if method!='Grep':
-	metric = 'cosine'
-	flog_name = 'result/PathwayEmb/RecoverPath/baseline_'+dataset + '_'+str(DCA_dim) +'_'+metric+'_'+str(DCA_rst) +'.txt'
-else:
-	flog_name = 'result/PathwayEmb/RecoverPath/'+str(optimize_diag_path)+'_'+str(DCA_rst)+'_threedataset_'+str(DCA_dim) + '_' + str(nhidden) +  '_' +str(lr) +  '_' +str(p_train) +  '_' +str(gene_loss_lambda) + '_' + str(max_iter) +'_'+str(early_stopping)+'.txt'
-evaluate_embedding(flog_name, p2g, Path_mat_test, Path_mat_train)
+save_mbedding( p2g, path_mu, path_cov, Grep_node_emb, output_file=output_emb_file)

@@ -23,7 +23,7 @@ from sklearn.cross_validation import train_test_split
 import scipy.spatial as sp
 
 
-def read_node_embedding(data_dir,DCA_dim,DCA_rst=0.8,network_file = 'network/human/string_integrated.txt'):
+def read_node_embedding(data_dir,DCA_dim,network_file, DCA_rst=0.8):
 	net_file_l = []
 	net_file_l.append(data_dir + network_file)
 	Net_obj = BioNetwork(net_file_l)
