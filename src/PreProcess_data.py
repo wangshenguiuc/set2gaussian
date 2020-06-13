@@ -23,57 +23,26 @@ from sklearn.cross_validation import train_test_split
 import scipy.spatial as sp
 
 
-def read_node_embedding(data_dir,DCA_dim,network_file, DCA_rst=0.8):
+def read_node_embedding(DCA_dim,network_file, DCA_rst=0.8):
 	net_file_l = []
-	net_file_l.append(data_dir + network_file)
+	net_file_l.append(network_file)
 	Net_obj = BioNetwork(net_file_l)
 	network = Net_obj.sparse_network.toarray()
+	print ('#node:',np.shape(network)[0])
 	i2g = Net_obj.i2g
 	g2i = Net_obj.g2i
 	nnode = len(i2g)
-
-	#python TuneParameterGeneSet.py 50 3 0.001 1.0 Reactome
-	node_emb_dump_file = 'data/network/embedding/my_dca/' + str(DCA_dim)+'_'+str(DCA_rst)
-	node_context_dump_file = 'data/network/embedding/my_dca/' + str(DCA_dim)+'_'+str(DCA_rst)+'_context'
-	if os.path.isfile(node_emb_dump_file) and os.path.isfile(node_context_dump_file):
-		node_emb = pickle.load(open(node_emb_dump_file, "rb" ))
-		node_context = pickle.load(open(node_context_dump_file, "rb" ))
-		RWR_dump_file = 'data/network/embedding/my_dca/RWR_'+str(DCA_rst)
-		Node_RWR = pickle.load(open(RWR_dump_file, "rb" ))
-	else:
-		RWR_dump_file = 'data/network/embedding/my_dca/RWR_'+str(DCA_rst)
-		if os.path.isfile(RWR_dump_file):
-			Node_RWR = pickle.load(open(RWR_dump_file, "rb" ))
-		else:
-			Node_RWR = RandomWalkRestart(network, DCA_rst)
-			with open(RWR_dump_file, 'wb') as output:
-				pickle.dump(Node_RWR, output, pickle.HIGHEST_PROTOCOL)
-		node_emb, _,_,_,node_context = DCA_vector(Node_RWR,DCA_dim)
-		with open(node_emb_dump_file, 'wb') as output:
-			pickle.dump(node_emb, output, pickle.HIGHEST_PROTOCOL)
-		with open(node_context_dump_file, 'wb') as output:
-			pickle.dump(node_context, output, pickle.HIGHEST_PROTOCOL)
+	Node_RWR = RandomWalkRestart(network, DCA_rst)
+	node_emb, _,_,_,node_context = DCA_vector(Node_RWR,DCA_dim)
+	print ('preprocess node embedding is finished')
 	return Net_obj, Node_RWR, node_emb, node_context
 
-def create_matrix(Node_RWR, Net_obj, p_train, dataset_l = ['nci','Reactome','msigdb']):
-	if isinstance(dataset_l, list):
-		Path_mat_train_all = []
-		Path_mat_test_all = []
-		for i,dataset in enumerate(dataset_l):
-			GR_obj = GenerateDiffusion(Node_RWR, Net_obj=Net_obj, dataset=dataset)
-			_, Path_mat_train, Path_mat_test, _, _ = GR_obj.RunDiffusion(p_train=p_train, random_state=0,all_gene_cv=False)
-			#Path_RWR, Path_mat_train, Path_mat_test, train_ind, test_ind
-			if i>0:
-				Path_mat_train_all = np.vstack((Path_mat_train_all,Path_mat_train))
-				Path_mat_test_all = np.vstack((Path_mat_test_all,Path_mat_test))
-			else:
-				Path_mat_train_all = Path_mat_train
-				Path_mat_test_all = Path_mat_test
-	else:
-		GR_obj = GenerateDiffusion(Node_RWR, Net_obj=Net_obj, dataset=dataset_l)
-		_, Path_mat_train_all, Path_mat_test_all, _, _ = GR_obj.RunDiffusion(p_train=p_train, random_state=0,all_gene_cv=False)
+def create_matrix(Node_RWR, Net_obj, p_train, gene_set_file):
+	GR_obj = GenerateDiffusion(Node_RWR, gene_set_file, Net_obj=Net_obj)
+	_, Path_mat_train_all, Path_mat_test_all, _, _ = GR_obj.RunDiffusion(p_train=p_train, random_state=0,all_gene_cv=False)
 
 	npath,nnode = np.shape(Path_mat_train_all)
+	print ('#node set', npath)
 	nsmooth = max(npath,nnode)
 	alpha = 1./(nsmooth*nsmooth)
 	node_alpha = 1./(nnode*nnode)
@@ -92,15 +61,12 @@ def save_mbedding(p2g, path_mu, path_cov, Grep_node_emb, output_file):
 
 def run_embedding_method(method,log_Path_RWR, log_node_RWR, Path_RWR, node_emb, node_context,train_ind,test_ind, Path_mat_train, para_dict, metric= 'cosine'):
 	npath, nnode = np.shape(Path_RWR)
-	if method == 'Grep':
+	if method == 'Set2Gaussian':
 		Grep_obj = Graph2Gauss(log_Path_RWR, log_node_RWR, Path_RWR, node_emb, node_context,
 		path_batch_size = 20, node_batch_size = 5000,lr = para_dict['lr'],
-		L=para_dict['DCA_dim'],optimize_diag_path=para_dict['optimize_diag_path'],optimize_path_mean = para_dict['optimize_path_mean'],n_hidden = [para_dict['nhidden']],early_stopping=para_dict['early_stopping'],gene_loss_lambda=para_dict['gene_loss_lambda'],max_iter=para_dict['max_iter'],seed=0,train_ind=train_ind,test_ind = test_ind)#change 200 to 20
+		L=para_dict['node_emb_dim'],optimize_diag_path=para_dict['optimize_diag_path'],optimize_path_mean = para_dict['optimize_path_mean'],n_hidden = [para_dict['nhidden']],early_stopping=para_dict['early_stopping'],gene_loss_lambda=para_dict['gene_loss_lambda'],max_iter=para_dict['max_iter'],seed=0,train_ind=train_ind,test_ind = test_ind)#change 200 to 20
 		path_mu, path_cov, Grep_node_emb, p2g = Grep_obj.train()
 		return path_mu, path_cov, Grep_node_emb, p2g
-
-	if method == 'RWR':
-		return [],[],[],log_Path_RWR
 	if method == 'Network_smoothed_mean':
 		Path_emb = np.dot( Path_RWR, node_emb)
 		Path_avg_emb = sp.distance.cdist(Path_emb, node_emb, metric)

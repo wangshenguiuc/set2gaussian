@@ -18,34 +18,6 @@ class Graph2Gauss:
 	 optimize_gene_vec=True,optimize_diag_path=1,lr = 0.0001,  n_hidden=[3],use_piecewise_loss=False,gene_loss_lambda=100.,
 				 max_iter=50,  seed=0, train_ind=[],
 			 	test_ind = []):
-		"""
-		Parameters
-		----------
-		A : scipy.sparse.spmatrix
-			Sparse unweighted adjacency matrix
-		X : scipy.sparse.spmatrix
-			Sparse attribute matirx
-		L : int
-			Dimensionality of the node embeddings
-		K : int
-			Maximum distance to consider
-		p_val : float
-			Percent of edges in the validation set, 0 <= p_val < 1
-		p_test : float
-			Percent of edges in the test set, 0 <= p_test < 1
-		p_nodes : float
-			Percent of nodes to hide (inductive learning), 0 <= p_nodes < 1
-		n_hidden : list(int)
-			A list specifying the size of each hidden layer, default n_hidden=[512]
-		max_iter :  int
-			Maximum number of epoch for which to run gradient descent
-		tolerance : int
-			Used for early stopping. Number of epoch to wait for the score to improve on the validation set
-		seed : int
-			Random seed used to split the edges into train-val-test set
-		verbose : bool
-			Verbosity.
-		"""
 
 		tf.reset_default_graph()
 		tf.set_random_seed(seed)
@@ -247,20 +219,6 @@ class Graph2Gauss:
 
 
 	def train(self, gpu_list='0'):
-		"""
-		Trains the model.
-
-		Parameters
-		----------
-		gpu_list : string
-			A list of available GPU devices.
-
-		Returns
-		-------
-		sess : tf.Session
-			Tensorflow session that can be used to obtain the trained embeddings
-
-		"""
 		final_path_cov = {}
 		final_g2g_node_emb = {}
 		final_p2g = {}

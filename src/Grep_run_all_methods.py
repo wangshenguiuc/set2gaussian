@@ -10,55 +10,27 @@ import gc
 import os
 from PreProcess_data import *
 
-if len(sys.argv) <= 2:
-	DCA_dim = 200
-	nhidden = 2
-	max_iter = 50
-	lr = 0.0001
-	p_train = 0.5
-	gene_loss_lambda = 100
-	dataset = ['nci']
-	early_stopping = 20
-else:
-	dataset = str(sys.argv[1])
-	DCA_dim = int(sys.argv[2])
-	nhidden = int(sys.argv[3])
-	lr = float(sys.argv[4])
-	p_train = float(sys.argv[5])
-	gene_loss_lambda = float(sys.argv[6])
-	max_iter = int(sys.argv[7])
-	early_stopping = int(sys.argv[8])
-
-optimize_diag_path = 1
-optimize_path_mean = False
-method = 'Grep'
-DCA_rst = 0.8
-data_dir = ''
-network_file = 'string_integrated.txt' # file format: geneA\tgeneB\tconfidence\n
+gene_set_file = '../data/node_set.txt'
+network_file = '../data/network.txt' # file format: geneA\tgeneB\tconfidence\n
 output_emb_file = 'output_embed'
 para_dict = {}
-para_dict['max_iter'] = max_iter
-para_dict['DCA_rst'] = DCA_rst
-para_dict['early_stopping'] = early_stopping
-para_dict['gene_loss_lambda'] = gene_loss_lambda
-para_dict['p_train'] = p_train
-para_dict['lr'] = lr
-para_dict['nhidden'] = nhidden
-para_dict['DCA_dim'] = DCA_dim
-para_dict['method'] = method
-para_dict['optimize_path_mean'] = optimize_path_mean
-if not isinstance(dataset, list):
-	para_dict['dataset_name'] = dataset
-else:
-	para_dict['dataset_name'] = 'threedataset'
-para_dict['optimize_diag_path'] = optimize_diag_path
+para_dict['max_iter'] = 50
+para_dict['node_emb_restart_prob'] = 0.8
+para_dict['early_stopping'] = 20
+para_dict['gene_loss_lambda'] = 100
+para_dict['p_train'] = 1.
+para_dict['lr'] = .0001
+para_dict['nhidden'] = 3#2
+para_dict['node_emb_dim'] = 500#3
+para_dict['method'] = 'Set2Gaussian'
+para_dict['optimize_path_mean'] = False
+para_dict['dataset_name'] = 'nci'
+para_dict['optimize_diag_path'] = 1
 
-print (dataset, DCA_dim, nhidden, lr, p_train, gene_loss_lambda, max_iter, early_stopping)
+Net_obj, Node_RWR, node_emb, node_context = read_node_embedding(para_dict['node_emb_dim'], network_file)
 
-Net_obj, Node_RWR, node_emb, node_context = read_node_embedding(data_dir, DCA_dim, network_file)
+Path_RWR, log_Path_RWR, log_node_RWR, train_ind, test_ind, Path_mat_train, _ = create_matrix(Node_RWR, Net_obj, para_dict['p_train'], gene_set_file)
 
-Path_RWR, log_Path_RWR, log_node_RWR, train_ind, test_ind, Path_mat_train, Path_mat_test = create_matrix(Node_RWR, Net_obj, p_train, dataset_l = dataset)
+path_mu, path_cov, Grep_node_emb, p2g = run_embedding_method(para_dict['method'], log_Path_RWR, log_node_RWR, Path_RWR, node_emb, node_context,train_ind,test_ind,Path_mat_train,para_dict)
 
-path_mu, path_cov, Grep_node_emb, p2g = run_embedding_method(method,log_Path_RWR, log_node_RWR, Path_RWR, node_emb, node_context,train_ind,test_ind,Path_mat_train,para_dict)
-
-save_mbedding( p2g, path_mu, path_cov, Grep_node_emb, output_file=output_emb_file)
+save_mbedding(p2g, path_mu, path_cov, Grep_node_emb, output_file=output_emb_file)
