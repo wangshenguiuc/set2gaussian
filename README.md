@@ -11,7 +11,15 @@ Sheng Wang, Emily Flynn, Russ B. Altman.
 
 ## Dataset
 We provide the dataset and embeddings of 13,886 gene sets from NCI, Reactome, and MSigDB [figshare](https://figshare.com/projects/Set2Gaussian/71099)
-A sample dataset is in the data folder. network.txt is the network node1\tnode2\tweight\n. node_set.txt is the node set. The format is set\tnode\n
+A sample dataset is in the data folder.
+network.txt is the network in the following format:
+node1	node2	weight
+...
+
+node_set.txt is the node set in the following format:
+set1	node1
+set1	node2
+...
 
 ## How to run
 
@@ -20,6 +28,7 @@ An example is in src/Grep_run_all_methods.py
 cd src
 python Grep_run_all_methods.py
 ```
+The embeddings will be saved in output_embed
 
 ## Prerequisite
 * python 2.7 (with slight modification, python 3.6 can also be used to run our tool)
