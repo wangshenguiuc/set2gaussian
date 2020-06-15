@@ -13,12 +13,17 @@ Sheng Wang, Emily Flynn, Russ B. Altman.
 We provide the dataset and embeddings of 13,886 gene sets from NCI, Reactome, and MSigDB [figshare](https://figshare.com/projects/Set2Gaussian/71099)
 A sample dataset is in the data folder.
 network.txt is the network in the following format:
+
 node1	node2	weight
+
 ...
 
 node_set.txt is the node set in the following format:
+
 set1	node1
+
 set1	node2
+
 ...
 
 ## How to run
