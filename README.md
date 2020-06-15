@@ -28,7 +28,7 @@ set1	node2
 
 ## How to run
 
-An example is in src/Grep_run_all_methods.py
+An example is in src/Grep_run_all_methods.py. It takes data/network.txt and data/node_set.txt as input.
 ```
 cd src
 python Grep_run_all_methods.py
