@@ -27,10 +27,14 @@ para_dict['optimize_path_mean'] = False
 para_dict['dataset_name'] = 'nci'
 para_dict['optimize_diag_path'] = 1
 
+#First step: use network (e.g., PPI network) to calculate node embedding and node diffusion states.
 Net_obj, Node_RWR, node_emb, node_context = read_node_embedding(para_dict['node_emb_dim'], network_file)
 
+#Second step: read gene sets and calculate gene set diffusion states
 Path_RWR, log_Path_RWR, log_node_RWR, train_ind, test_ind, Path_mat_train, _ = create_matrix(Node_RWR, Net_obj, para_dict['p_train'], gene_set_file)
 
+#Third step: run gaussian embedding. Path_mu (2d array) is the mean embedding of each gene set. Path_cov (dictionary) is the covariance matrix of each gene set.
 path_mu, path_cov, Grep_node_emb, p2g = run_embedding_method(para_dict['method'], log_Path_RWR, log_node_RWR, Path_RWR, node_emb, node_context,train_ind,test_ind,Path_mat_train,para_dict)
 
+#Fourth step: save everything to the file.
 save_mbedding(p2g, path_mu, path_cov, Grep_node_emb, output_file=output_emb_file)
