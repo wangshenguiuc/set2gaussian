@@ -10,6 +10,7 @@ import gc
 import os
 from PreProcess_data import *
 
+#Step 0: change gene_set_file and network_file to your files. The only parameters worth tunning are para_dict['nhidden'] (e.g., 1-5) and para_dict['node_emb_dim'] (e.g., 200-1000).
 gene_set_file = '../data/node_set.txt'
 network_file = '../data/network.txt' # file format: geneA\tgeneB\tconfidence\n
 output_emb_file = 'output_embed'
